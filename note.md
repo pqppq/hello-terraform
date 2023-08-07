@@ -19,11 +19,25 @@ resource "aws_instance" "example" {
 }
 ```
 
+## Variable
+```
+variable "server_port" {
+  description = "The port the server will use for HTTP requests"
+  type        = number
+}
+...
+$ terraform plan -var "server_port=8080"
+or
+$ export TF_VAR_server_port=8080
+$ terraform plan
+```
+
 ```
 $ terraform init
 $ terraform plan
 $ terraform apply
 $ terraform destroy
+$ terraform graph
 ```
 
 ## Related
