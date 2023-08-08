@@ -90,6 +90,8 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 ```
 
+locking(awsだとDynamo DBのテーブルでlockを管理できる/GCPだとデフォルトでサポートされているらしい?)
+[Backend/s3](https://developer.hashicorp.com/terraform/language/settings/backends/s3) 
 
 ## Related
 
