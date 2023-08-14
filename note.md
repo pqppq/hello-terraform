@@ -93,6 +93,46 @@ resource "aws_s3_bucket_versioning" "example" {
 locking(awsだとDynamo DBのテーブルでlockを管理できる/GCPだとデフォルトでサポートされているらしい?)
 [Backend/s3](https://developer.hashicorp.com/terraform/language/settings/backends/s3) 
 
+## Isolation
+
+workspace
+```
+$ terraform workspace -h
+Usage: terraform [global options] workspace
+
+  new, list, show, select and delete Terraform workspaces.
+
+Subcommands:
+    delete    Delete a workspace
+    list      List Workspaces
+    new       Create a new workspace
+    select    Select a workspace
+    show      Show the name of the current workspace
+```
+
+file layout base
+
+example
+```
+/stage
+/prod
+/mgmt
+  - an environment for DevOps tooling
+/global
+  - glboal resource, ex. S3, IAM
+/vpc
+/services
+  - app or micro services to run
+/data-storage
+  - ex. MySQL, Redis, ...
+variables.tf
+outputs.tf
+main.tf
+```
+
+[terraform console command](https://developer.hashicorp.com/terraform/cli/commands/console) 
+> You can use it to test interpolations before using them in configurations and to interact with any values currently saved in state. 
+
 ## Related
 
 - [Terragrunt](https://terragrunt.gruntwork.io/) 
