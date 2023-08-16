@@ -133,6 +133,103 @@ main.tf
 [terraform console command](https://developer.hashicorp.com/terraform/cli/commands/console) 
 > You can use it to test interpolations before using them in configurations and to interact with any values currently saved in state. 
 
+## Modules
+```terraform
+module "<NAME>" {
+    source = "<SOURCE>"
+
+    [CONFIG ...]
+}
+```
+
+### Gotchas
+
+[telmpatefile FUnct](https://developer.hashicorp.com/terraform/language/functions/templatefilez) 
+
+Path reference
+- path.module
+- path.root
+- path.cwd
+
+```terraform
+user_data = templatefile("${path.module}/user-data.sh", {
+  server_port = var.server_port,
+  db_address = data.terraform_remote_state.db.outputs.address
+  ...
+})
+```
+
+## Tips and Tricks
+
+```terraform
+resource "aws_iam_user" "example" {
+    count = 3
+    name = "user.${count.index}" # -> user.1, user.2, user.3
+}
+```
+
+```terraform
+variable "user_names" {
+  description = "Crate IAM users with these names"
+  type        = list(string)
+  default     = ["neo", "trinity", "morpheus"]
+}
+
+...
+
+resource "aws_iam_user" "example" {
+  count = length(var.user_names) # -> 3
+  name = var.user_names[count.index] # -> "neo", "trinity", "morpheus"
+}
+
+...
+
+output "first_arn" {
+  value = aws_iam_usre.example[0].arn
+  description = "The ARN for first iam user"
+}
+
+output "all_arn" {
+  # shellの@的な
+  value = aws_iam_usre.example[*].arn
+  description = "The ARNs for all users"
+}
+```
+
+count.indexはinline-blockでは使えない。
+
+listでvariableを定義しリソースを生成した場合、たとえばaws_iam_user.exampleはリソースの配列になるので、listを変更したときに予期せぬ不具合を招くおそれがある。たとえば、["neo", "trinity", "morpheus"]を["neo", "morpheus"]に変更するとterraformは"trinity"->"morpheus", "morpheus"->"null"の変更だと認識してしまう。
+
+[The for_each Meta-Argument](https://developer.hashicorp.com/terraform/language/meta-arguments/for_each) 
+
+for_eachを使うと、今度はリソースの配列からマップに変わるので意図した挙動になる。
+
+inline-blockを動的に生成するにはfor_eachと`dynamic`を組み合わせて使う。
+
+[dynamic Blocks](https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks) 
+
+```terraform
+dynamic "<VAR_NAME>" {
+  for_each = <COLLECTION>
+  
+  content {
+    [CONFIG...]  
+  }
+}
+```
+
+pythonのforっぽい構文も用意されている
+
+[for Expressions](https://developer.hashicorp.com/terraform/language/expressions/for) 
+
+```terraform
+[for s in var.list : upper(s)]
+[for i, v in var.list : "${i} is ${v}"]
+{for s in var.list : s => upper(s)}
+```
+
+ディレクティブ的なものも使えるらしく`"%{ for ... }"<expression>%{ endfor }`みたいな書き方もできるっぽい。
+
 ## Related
 
 - [Terragrunt](https://terragrunt.gruntwork.io/) 
