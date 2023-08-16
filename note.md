@@ -230,6 +230,30 @@ pythonのforっぽい構文も用意されている
 
 ディレクティブ的なものも使えるらしく`"%{ for ... }"<expression>%{ endfor }`みたいな書き方もできるっぽい。
 
+```terraform
+output "for_directive_index" {
+	value = "%{ for i, name in var.user_names }(${i}) ${name}%{ endfor }"
+	# => "(0) neo, (1) trinity, (2) morpheus"
+}
+```
+
+terraformで条件分岐を記述するには三項演算子かifディレクティブ(とヒアドキュメント)を使う。
+
+```terraform
+output "for_directive_index_if" {
+  value = <<EOF
+    %{ for i, name in var.user_names }
+      ${name}%{ if i < length(var.user_names) -1 }, %{ endif }
+    %{ endfor }
+  EOF
+}
+```
+
+[The lifecycle Meta-Argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) 
+
+[Command: state mv](https://developer.hashicorp.com/terraform/cli/commands/state/mv) 
+    - リソース名の変更(tfstateの書き換え)
+
 ## Related
 
 - [Terragrunt](https://terragrunt.gruntwork.io/) 
