@@ -254,6 +254,44 @@ output "for_directive_index_if" {
 [Command: state mv](https://developer.hashicorp.com/terraform/cli/commands/state/mv) 
     - リソース名の変更(tfstateの書き換え)
 
+## Secrets
+
+[99designs/aws-vault](https://github.com/99designs/aws-vault) 
+
+secretを使用するいくつかの方法
+- variableとして定義してTF_VAR_として渡す
+    - pros
+        - tfファイルから手軽にsecretを取り除くことができる
+    - cons
+        - secretの管理がTerraformの枠組みの外になる(securityに対してTerraformは制約をかけられない)
+        - secretのバージョニングが原因で問題が起こる可能性が高まる
+- encrypt
+    - secretを各プロバイダーのCLIなどでencryptする
+        - [Data Source: aws_kms_secrets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/kms_secrets) 
+- secret store
+    - AWS Secret Manager, Google Secet Manager, HashiCorp Vault, etc
+
+ex. encrypt(with aws kms)
+```
+# db-creds.yml
+username: admin
+password: password
+
+data "aws_kms_secrets" "creds" {
+    secret {
+        name = "db"
+        # Base64 encoded payload, as returned the Encryption Context for the secret
+        payload = file("${path.module}/db-creds.yml.encrypted")
+    }
+}
+
+locals {
+    db_creds = yamldecode(data.aws_kms_secrets.creds.plaintext["db"])
+}
+```
+
+[getsops/sops](https://github.com/getsops/sops) 
+
 ## Related
 
 - [Terragrunt](https://terragrunt.gruntwork.io/) 
