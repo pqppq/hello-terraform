@@ -290,7 +290,64 @@ locals {
 }
 ```
 
+### Multiple Region
+
+```terraform
+provider "aws" {
+  region = "us-east-2"
+  alias = "region_1"
+}
+
+data "aws_ami" "ubuntu_region_1" {
+  provider = aws.region_1
+  ...
+}
+
+resource "aws_instance" "region_1" {
+  provider = aws.region_1
+
+  ami = data.aws_ami.ubuntu_region_1.id
+  instance_type = "t2.micro"
+}
+```
+
+warning
+- マルチリージョンをTerraformで管理するのは大変
+    - リージョン間の遅延、可用性の設計、複数リージョンでの一意なID生成、データ規制、etc.
+- aliasの多用を避ける
+    - どこかのリージョンが落ちていたらterraform planの結果を実行することが出来ない(共通のmoduleを使ってる場合?)ので、障害時にインフラの変更が出来なくなってしまう(?)
+    - 原則として各環境はisolatedな状態を保つように作成するべき
+    - Cloud Front(とTLS証明書の設定)を使うなどの特定のケースを除けばaliasが絶対に必要なケースは少ない
+
+
 [getsops/sops](https://github.com/getsops/sops) 
+
+## Validation
+
+```terraform
+variable "instance_type" {
+  description = "The type of EC2 instances to run"
+  type = string
+
+  validation {
+    condition = contains(["t2.micro", "t3.micro"], var.instance_type)
+    error_message = "Only free tier is allowed: t2.micro or t3.micro"
+  }
+}
+```
+
+[Input Variable Validation](https://developer.hashicorp.com/terraform/language/expressions/custom-conditions#input-variable-validation) 
+
+- validation block
+    - for basic input sanitization
+- precondition block
+    - for checking basic assumptions
+- postcondition block
+    - for enforcing basic asswguarantees
+
+## Tests
+
+
 
 ## Related
 
@@ -304,3 +361,6 @@ locals {
 ## MISC
 
 - [HashiCorp Terraform Supports Amazon Linux 2](https://www.hashicorp.com/blog/hashicorp-terraform-supports-amazon-linux-2) 
+- [alias: Multiple Provider Configurations](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) 
+- [gruntwork-io/cloud-nuke](https://github.com/gruntwork-io/cloud-nuke) 
+- [gruntwork-io/terratest](https://github.com/gruntwork-io/terratest) 
